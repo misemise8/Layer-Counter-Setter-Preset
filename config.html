@@ -1,68 +1,90 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>プリセット設定</title>
-  <style>
-    html,body { height:100%; margin:0; padding:20px; overflow:auto; font-family:sans-serif; }
-    .slot { margin-bottom:12px; }
-    .slot input { width:200px; }
-    .slot button { margin-left:8px; }
-    .actions { margin-top:20px; text-align:right; }
-  </style>
-  <script src="lib/CSInterface.js"></script>
+  <meta charset="UTF-8">
+  <title>FFX プリセット設定</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>FFX プリセット設定</h2>
-  <div id="slots"></div>
-  <div class="actions">
-    <button id="btn-cancel">キャンセル</button>
-    <button id="btn-save">保存</button>
+  <div class="config-container">
+    <h2>FFX プリセット設定</h2>
+    <div id="slot-container"></div>
+    <div class="btn-row">
+      <button id="btn-save">保存</button>
+      <button id="btn-cancel">キャンセル</button>
+    </div>
   </div>
 
+  <input type="file" id="preset-file" accept=".ffx" style="display:none">
+
   <script>
-    function renderSlots(cfgs){
-      const cont = document.getElementById('slots'); cont.innerHTML = '';
-      for(let i=0; i<8; i++){
-        const c = cfgs[i]||{};
-        const div = document.createElement('div'); div.className='slot';
-        div.innerHTML = `Slot ${i+1}: <input type="text" class="label" value="${c.label||''}" placeholder="ラベル">`
-          + `<button class="select">.ffx選択</button>`
-          + `<span class="path">${c.path?c.path.split(/[\/]/).pop():'未選択'}</span>`;
-        div.querySelector('.select').addEventListener('click', () => {
-          new CSInterface().evalScript('selectPresetFile()', res => {
-            if(!res||res==='null') return;
-            c.path = res;
-            div.querySelector('.path').textContent = res.split(/[\/]/).pop();
-          });
+    let cfgs = [];
+
+    function renderSlots(data) {
+      const container = document.getElementById('slot-container');
+      container.innerHTML = '';
+      for (let i = 0; i < 8; i++) {
+        const cfg = data[i] || {};
+        const slot = document.createElement('div');
+        slot.className = 'slot';
+
+        const labelInput = document.createElement('input');
+        labelInput.className = 'label';
+        labelInput.placeholder = `Slot ${i + 1} 名称`;
+        labelInput.value = cfg.label || '';
+
+        const pathInput = document.createElement('input');
+        pathInput.className = 'path';
+        pathInput.type = 'text';
+        pathInput.readOnly = true;
+        pathInput.value = cfg.path || '';
+
+        const selectBtn = document.createElement('button');
+        selectBtn.textContent = '選択';
+        selectBtn.addEventListener('click', () => {
+          const file = document.createElement('input');
+          file.type = 'file';
+          file.accept = '.ffx';
+          file.onchange = (e) => {
+            const f = e.target.files[0];
+            if (f) {
+              pathInput.value = f.fsName || f.path || f.name;
+              cfgs[i] = {
+                ...cfgs[i],
+                path: f.fsName || f.path || f.name
+              };
+            }
+          };
+          file.click();
         });
-        cont.appendChild(div);
+
+        slot.appendChild(labelInput);
+        slot.appendChild(pathInput);
+        slot.appendChild(selectBtn);
+        container.appendChild(slot);
       }
     }
 
-    let cfgs = [];
-    window.addEventListener('message', e => {
-      if(e.data?.type==='loadPresets'){
-        cfgs = e.data.configs || [];
-        renderSlots(cfgs);
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      const stored = localStorage.getItem('ffxPresetConfig');
+      cfgs = stored ? JSON.parse(stored) : [];
+      renderSlots(cfgs);
     });
 
     document.getElementById('btn-save').addEventListener('click', () => {
-      document.querySelectorAll('.slot').forEach((d,i)=>{
+      document.querySelectorAll('.slot').forEach((d, i) => {
         const lbl = d.querySelector('.label').value.trim();
-        cfgs[i] = { path: cfgs[i]?.path||null, label: lbl||null };
+        cfgs[i] = {
+          ...cfgs[i],
+          label: lbl || null
+        };
       });
-      const msg = { type:'savePresets', configs: cfgs };
-      if(window.opener) window.opener.postMessage(msg,'*');
-      else if(window.parent) window.parent.postMessage(msg,'*');
-      if(window.opener) window.close();
-      else window.parent.document.getElementById('configOverlay').style.display='none';
+      localStorage.setItem('ffxPresetConfig', JSON.stringify(cfgs));
+      window.close();
     });
 
     document.getElementById('btn-cancel').addEventListener('click', () => {
-      if(window.opener) window.close();
-      else window.parent.document.getElementById('configOverlay').style.display='none';
+      window.close();
     });
   </script>
 </body>
