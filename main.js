@@ -101,13 +101,14 @@
     receivePresetConfig(window.ffxPresetConfig);
 
     btnCustomize.addEventListener('click', () => {
-      if (toggleWindow?.checked) {
-        // 別ウィンドウ
-        const win = window.open(
-          'config.html',
-          'PresetConfigWindow',
-          'width=600,height=700,scrollbars=yes'
+      if (toggleWindow.checked) {
+        // ❌ window.open() の代わりに…
+        cs.openModelessDialog(
+          `file://${ext}/html/config.html`,
+          'PresetConfig',
+          'width=600,height=700'
         );
+      }
         win.addEventListener('load', () => {
           win.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
         });
