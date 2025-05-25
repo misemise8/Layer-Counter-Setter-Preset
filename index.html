@@ -1,0 +1,126 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AddLayerPanelCEP Dark theme</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="lib/CSInterface.js"></script>
+  <script src="main.js" defer></script>
+</head>
+<body>
+  <div class="tab-container">
+    <ul class="tabs">
+      <li class="tab-button active" data-tab="tab1">Add Layer</li>
+      <li class="tab-button"        data-tab="tab2">Frame Counter</li>
+      <li class="tab-button"        data-tab="tab3">Comp Setter</li>
+      <li class="tab-button"        data-tab="tab4">FFX Preset</li>
+    </ul>
+
+    <!-- タブ1：Add Layer -->
+    <div id="tab1" class="tab-content active">
+      <div class="button-grid">
+        <button id="btn-add-camera">Add Camera</button>
+        <button id="btn-add-null-1">Add 1 Null</button>
+        <button id="btn-add-motion-tile">Motion Tile</button>
+
+        <button id="btn-add-adjustment">Add Adjust</button>
+        <button id="btn-add-null-2">Add 2 Null</button>
+        <button id="btn-add-one-frame">One Frame</button>
+
+        <button id="btn-add-solid">Add Solid</button>
+        <button id="btn-add-null-3">Add 3 Null</button>
+        <button id="btn-split-dimensions">Dimensions</button>
+
+        <button id="btn-add-text">Add Text</button>
+        <div></div> <!-- 空セル -->
+        <button id="btn-save-project">Save Project</button>
+      </div>
+    </div>
+
+    <!-- タブ2：Frame Counter -->
+    <div id="tab2" class="tab-content">
+      <div class="frame-counter">
+        <div class="btn-group">
+          <button id="btnStart">Count Start</button>
+          <button id="btnEnd">Count End</button>
+        </div>
+        <textarea id="resultBox" readonly></textarea>
+      </div>
+    </div>
+
+    <!-- タブ3：Comp Setter -->
+    <div id="tab3" class="tab-content">
+      <div class="comp-setter">
+        <div class="row">
+          <label>W: <input type="number" id="compWidth" value="1920" /></label>
+          <label>H: <input type="number" id="compHeight" value="1080" /></label>
+          <label>FPS: <input type="number" step="0.01" id="compFps" value="29.97" /></label>
+        </div>
+
+        <div class="row">
+          <label>Preset:
+            <select id="presetResolution">
+              <option value="">-- Resolution --</option>
+              <option value="1920x1080">1920 x 1080</option>
+              <option value="1600x1080">1600 x 1080</option>
+              <option value="1080x1080">1080 x 1080</option>
+              <option value="active">From Active Comp</option>
+            </select>
+          </label>
+
+          <label>Preset:
+            <select id="presetFramerate">
+              <option value="">-- FPS --</option>
+              <option value="15">15</option>
+              <option value="18">18</option>
+              <option value="20">20</option>
+              <option value="24">24</option>
+              <option value="30">30</option>
+              <option value="active">From Active Comp</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label><input type="checkbox" id="setDuration" /> Set Duration</label>
+          <input type="number" id="compDuration" value="300" />
+          <select id="durationUnit">
+            <option value="frames">Frames</option>
+            <option value="seconds">Seconds</option>
+          </select>
+        </div>
+
+        <div class="row apply-buttons">
+          <button id="btnApplyComp">適用 / Apply</button>
+          <button id="btnCenterLayers">Center Layers</button>
+        </div>
+      </div>
+      <div class="credit">Created By @misemise888</div>
+    </div>
+
+    <!-- タブ4：FFX Preset -->
+    <div id="tab4" class="tab-content">
+      <div class="ffx-preset-panel">
+        <h2>FFX プリセットを適用</h2>
+        <div class="apply-buttons-grid">
+          <button class="preset-apply" data-index="0" disabled>Slot 1</button>
+          <button class="preset-apply" data-index="1" disabled>Slot 2</button>
+          <button class="preset-apply" data-index="2" disabled>Slot 3</button>
+          <button class="preset-apply" data-index="3" disabled>Slot 4</button>
+          <button class="preset-apply" data-index="4" disabled>Slot 5</button>
+          <button class="preset-apply" data-index="5" disabled>Slot 6</button>
+          <button class="preset-apply" data-index="6" disabled>Slot 7</button>
+          <button class="preset-apply" data-index="7" disabled>Slot 8</button>
+        </div>
+        <button id="btn-customize-presets">プリセット設定</button>
+      </div>
+    </div>
+
+    <!--モーダル>--> 
+    <div id="configOverlay" class="config-overlay" style="display: none;">
+      <iframe id="configFrame" class="config-iframe"></iframe>
+    </div>
+  
+</body>
+</html>

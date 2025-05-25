@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>プリセット設定</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="lib/CSInterface.js"></script>
+  <script>
+    const csInterface = new CSInterface();
+
+    function renderSlots(savedConfig = []) {
+      const SLOT_COUNT = 8;
+      const configGrid = document.getElementById('config-grid');
+      configGrid.innerHTML = '';
+
+      for (let i = 0; i < SLOT_COUNT; i++) {
+        const saved = savedConfig[i] || {};
+        const slot = document.createElement('div');
+        slot.className = 'config-slot';
+        slot.dataset.index = i;
+        slot.dataset.path = saved.path || '';
+        slot.innerHTML = `
+          <label class="slot-label">Slot ${i + 1}:</label>
+          <input type="text" class="config-label" placeholder="名称" value="${saved.label || ''}" />
+          <button class="config-select">.ffx 選択</button>
+          <div class="config-path">${saved.path ? saved.path.replace(/^.*[\\/]/, '') : '未選択'}</div>
+        `;
+        configGrid.appendChild(slot);
+
+        const btnSelect = slot.querySelector('.config-select');
+        const inputLabel = slot.querySelector('.config-label');
+        const divPath = slot.querySelector('.config-path');
+        let autoFilled = false;
+
+        inputLabel.addEventListener('input', () => { autoFilled = false; });
+
+        btnSelect.addEventListener('click', () => {
+          csInterface.evalScript('selectPresetFile()', result => {
+            if (!result || result === 'null') return;
+            slot.dataset.path = result;
+            const name = result.replace(/^.*[\\/]/, '');
+            divPath.textContent = name;
+            if (!autoFilled && !inputLabel.value) {
+              inputLabel.value = name.replace(/\.ffx$/i, '').slice(0, 5);
+              autoFilled = true;
+            }
+          });
+        });
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btn-save').addEventListener('click', () => {
+        const configs = [];
+        document.querySelectorAll('.config-slot').forEach(slot => {
+          const idx = +slot.dataset.index;
+          const label = slot.querySelector('.config-label').value.trim() || null;
+          const path = slot.dataset.path || null;
+          configs[idx] = { label, path };
+        });
+
+        if (window.parent && typeof window.parent.receivePresetConfig === 'function') {
+          window.parent.receivePresetConfig(configs);
+        }
+
+        if (window.parent && typeof window.parent.closeConfigModal === 'function') {
+          window.parent.closeConfigModal();
+        }
+      });
+
+      document.getElementById('btn-cancel').addEventListener('click', () => {
+        if (window.parent && typeof window.parent.closeConfigModal === 'function') {
+          window.parent.closeConfigModal();
+        }
+      });
+    });
+
+    window.addEventListener('message', (event) => {
+      if (!event.data || event.data.type !== 'loadPresets') return;
+      renderSlots(event.data.configs || []);
+    });
+  </script>
+</head>
+<body>
+  <h3 class="config-title">プリセット設定</h3>
+  <div id="config-grid" class="config-grid"></div>
+  <div class="modal-actions">
+    <button id="btn-save" class="action-button">保存</button>
+    <button id="btn-cancel" class="action-button">キャンセル</button>
+  </div>
+</body>
+</html>
