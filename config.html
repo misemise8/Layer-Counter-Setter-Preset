@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <title>プリセット設定</title>
   <style>
-    html,body{ height:100%; margin:0; padding:20px; overflow:auto; font-family:sans-serif; }
-    .slot{ margin-bottom:12px; }
-    .slot input{ width:200px; }
-    .slot button{ margin-left:8px; }
-    .actions{ margin-top:20px; text-align:right; }
+    html,body { height:100%; margin:0; padding:20px; overflow:auto; font-family:sans-serif; }
+    .slot { margin-bottom:12px; }
+    .slot input { width:200px; }
+    .slot button { margin-left:8px; }
+    .actions { margin-top:20px; text-align:right; }
   </style>
   <script src="lib/CSInterface.js"></script>
 </head>
@@ -21,45 +21,46 @@
   </div>
 
   <script>
-    // 範囲外スロットのUI構築
     function renderSlots(cfgs){
-      const cont=document.getElementById('slots'); cont.innerHTML='';
-      for(let i=0;i<8;i++){
-        const c=cfgs[i]||{};
-        const div=document.createElement('div'); div.className='slot';
-        div.innerHTML=`Slot ${i+1}: <input type=\"text\" class=\"label\" value=\"${c.label||''}\" placeholder=\"ラベル\" />
-          <button class=\"select\">.ffx選択</button>
-          <span class=\"path\">${c.path?c.path.split(/[\\/]/).pop():'未選択'}</span>`;
-        div.querySelector('.select').addEventListener('click',()=>{
-          new CSInterface().evalScript('selectPresetFile()',res=>{
-            if(!res||res==='null')return;
-            c.path=res; div.querySelector('.path').textContent=res.split(/[\\/]/).pop();
+      const cont = document.getElementById('slots'); cont.innerHTML = '';
+      for(let i=0; i<8; i++){
+        const c = cfgs[i]||{};
+        const div = document.createElement('div'); div.className='slot';
+        div.innerHTML = `Slot ${i+1}: <input type="text" class="label" value="${c.label||''}" placeholder="ラベル">`
+          + `<button class="select">.ffx選択</button>`
+          + `<span class="path">${c.path?c.path.split(/[\/]/).pop():'未選択'}</span>`;
+        div.querySelector('.select').addEventListener('click', () => {
+          new CSInterface().evalScript('selectPresetFile()', res => {
+            if(!res||res==='null') return;
+            c.path = res;
+            div.querySelector('.path').textContent = res.split(/[\/]/).pop();
           });
         });
         cont.appendChild(div);
       }
     }
 
-    let cfgs=[];
-    window.addEventListener('message',e=>{
+    let cfgs = [];
+    window.addEventListener('message', e => {
       if(e.data?.type==='loadPresets'){
-        cfgs=e.data.configs||[]; renderSlots(cfgs);
+        cfgs = e.data.configs || [];
+        renderSlots(cfgs);
       }
     });
 
-    document.getElementById('btn-save').addEventListener('click',()=>{
-      document.querySelectorAll('#slots .slot').forEach((d,i)=>{
-        const lbl=d.querySelector('.label').value.trim();
-        cfgs[i]={ path:cfgs[i]?.path||null, label:lbl||null };
+    document.getElementById('btn-save').addEventListener('click', () => {
+      document.querySelectorAll('.slot').forEach((d,i)=>{
+        const lbl = d.querySelector('.label').value.trim();
+        cfgs[i] = { path: cfgs[i]?.path||null, label: lbl||null };
       });
-      const msg={type:'savePresets',configs:cfgs};
+      const msg = { type:'savePresets', configs: cfgs };
       if(window.opener) window.opener.postMessage(msg,'*');
       else if(window.parent) window.parent.postMessage(msg,'*');
       if(window.opener) window.close();
       else window.parent.document.getElementById('configOverlay').style.display='none';
     });
 
-    document.getElementById('btn-cancel').addEventListener('click',()=>{
+    document.getElementById('btn-cancel').addEventListener('click', () => {
       if(window.opener) window.close();
       else window.parent.document.getElementById('configOverlay').style.display='none';
     });
