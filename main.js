@@ -90,7 +90,7 @@
       else if (v) document.getElementById('compFps').value = v;
     });
 
-    // FFX Preset: モーダル or ウィンドウ選択
+    // FFX Preset: モーダル or モデルレスダイアログ
     const toggleWindow = document.getElementById('toggleWindow');
     const btnCustomize  = document.getElementById('btn-customize-presets');
     const overlay       = document.getElementById('configOverlay');
@@ -101,23 +101,25 @@
     receivePresetConfig(window.ffxPresetConfig);
 
     btnCustomize.addEventListener('click', () => {
-      if (toggleWindow.checked) {
-        // ❌ window.open() の代わりに…
-        cs.openModelessDialog(
-          `file://${ext}/html/config.html`,
-          'PresetConfig',
-          'width=600,height=700'
-        );
-      }
-        win.addEventListener('load', () => {
-          win.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
-        });
+      if (toggleWindow?.checked) {
+        try {
+          // まず CEP モデルレスダイアログ
+          cs.openModelessDialog(
+            `file://${ext}/html/config.html`,
+            'PresetConfig',
+            'width=600,height=700'
+          );
+        } catch (e) {
+          // 万が一エラーなら外部ブラウザ
+          console.warn('ModelessDialog failed:', e);
+          cs.openURLInDefaultBrowser(`file://${ext}/html/config.html`);
+        }
       } else {
-        // iframeモーダル
+        // 既存の iframe モーダル
         iframe.src = 'config.html';
         overlay.style.display = 'flex';
         iframe.onload = () => {
-          iframe.contentWindow.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
+          iframe.contentWindow.postMessage({ type:'loadPresets', configs: ffxConfig }, '*');
         };
       }
     });
@@ -147,7 +149,7 @@
       btn.addEventListener('click', () => {
         const cfg = window.ffxPresetConfig[i] || {};
         if (!cfg.path) return alert('まずプリセットを設定してください。');
-        cs.evalScript(`applyPreset("${cfg.path.replace(/\\/g,'\\\\')}")`);
+        cs.evalScript(`applyPreset("${cfg.path.replace(/\\/g,'\\\\')} ")`);
       });
     });
 

@@ -324,3 +324,27 @@ label {
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(0,0,0,0.6);
 }
+
+#configOverlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  /* 追加：内容がはみ出したらスクロール */
+  overflow: auto;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#configFrame {
+  /* 高さをpx固定すると、パネルの高さが足りない場合に見切れるので */
+  /* 画面高さの80%など相対指定にすると良い */
+  width: 80%;
+  height: 80%;
+  max-width: 600px;
+  max-height: 700px;
+  border: none;
+  background: white;
+}
