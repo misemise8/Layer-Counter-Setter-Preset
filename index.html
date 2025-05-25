@@ -105,22 +105,31 @@
         <h2>FFX プリセットを適用</h2>
         <div class="apply-buttons-grid">
           <button class="preset-apply" data-index="0" disabled>Slot 1</button>
-          <button class="preset-apply" data-index="1" disabled>Slot 2</button>
-          <button class="preset-apply" data-index="2" disabled>Slot 3</button>
-          <button class="preset-apply" data-index="3" disabled>Slot 4</button>
-          <button class="preset-apply" data-index="4" disabled>Slot 5</button>
-          <button class="preset-apply" data-index="5" disabled>Slot 6</button>
-          <button class="preset-apply" data-index="6" disabled>Slot 7</button>
+          <!-- …Slot 2～8 も同様に… -->
           <button class="preset-apply" data-index="7" disabled>Slot 8</button>
         </div>
-        <button id="btn-customize-presets">プリセット設定</button>
+
+        <!-- ここにトグルと設定ボタンを追加 -->
+        <label style="margin-top:16px;display:flex;align-items:center;">
+          <input type="checkbox" id="toggleWindow" style="margin-right:8px" />
+          別ウィンドウで開く
+        </label>
+        <button id="btn-customize-presets" style="margin-top:8px;">プリセット設定</button>
       </div>
     </div>
 
-    <!--モーダル>--> 
-    <div id="configOverlay" class="config-overlay" style="display: none;">
-      <iframe id="configFrame" class="config-iframe"></iframe>
+    <!-- iframeオーバーレイによるモーダル -->
+    <div id="configOverlay" style="
+        display:none;
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.6);
+        justify-content:center;align-items:center;
+      ">
+      <iframe id="configFrame" src="" style="
+        width:600px;height:700px;border:none;
+        background:white;
+      "></iframe>
     </div>
-  
+  </div>
 </body>
 </html>

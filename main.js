@@ -5,211 +5,164 @@
 
   // ExtendScript 読み込み
   ['function.jsx', 'simpleFrameCounter.jsx', 'simpleCompSetter.jsx', 'ffxPreset.jsx']
-    .forEach(f => cs.evalScript(`$.evalFile("${jsxBase}${f}")`));
+    .forEach(f => cs.evalScript(`$.evalFile(\"${jsxBase}${f}\")`));
 
-  // タブ切り替え
-  document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tgt = btn.dataset.tab;
-      document.querySelectorAll('.tab-button')
-        .forEach(b => b.classList.toggle('active', b === btn));
-      document.querySelectorAll('.tab-content')
-        .forEach(c => c.classList.toggle('active', c.id === tgt));
+  document.addEventListener('DOMContentLoaded', () => {
+    // タブ切り替え
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tgt = btn.dataset.tab;
+        document.querySelectorAll('.tab-button')
+          .forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-content')
+          .forEach(c => c.classList.toggle('active', c.id === tgt));
+      });
     });
-  });
 
-  // Frame Counter
-  const resultBox = document.getElementById('resultBox');
-  const btnStart = document.getElementById('btnStart');
-  const btnEnd = document.getElementById('btnEnd');
-  if (btnStart && resultBox) {
-    btnStart.onclick = () =>
-      cs.evalScript('sfc_countStart()', r => resultBox.value = r);
-  }
-  if (btnEnd && resultBox) {
-    btnEnd.onclick = () =>
-      cs.evalScript('sfc_countEnd()', r => resultBox.value = r);
-  }
-
-  // Layer追加ボタン
-  const layerButtons = [
-    { id: 'btn-add-camera', fn: 'addCameraAboveSelectedLayers()' },
-    { id: 'btn-add-null-1', fn: 'addNullLayers(1)' },
-    { id: 'btn-add-motion-tile', fn: null },
-    { id: 'btn-add-adjustment', fn: 'addAdjustmentLayer()' },
-    { id: 'btn-add-null-2', fn: 'addNullLayers(2)' },
-    { id: 'btn-add-one-frame', fn: 'addOneFrameAdjustmentLayer()' },
-    { id: 'btn-add-solid', fn: 'addSolidLayer()' },
-    { id: 'btn-add-null-3', fn: 'addNullLayers(3)' },
-    { id: 'btn-split-dimensions', fn: 'splitLayersIntoDimensions()' },
-    { id: 'btn-add-text', fn: 'addTextLayer()' },
-    { id: 'btn-save-project', fn: 'saveProject()' }
-  ];
-
-  layerButtons.forEach(({ id, fn }) => {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    if (!fn) {
-      console.warn(`ボタン ${id} に関数が設定されていません`);
-      return;
-    }
-    btn.addEventListener('click', () =>
-      cs.evalScript(fn, res => console.log(`${fn} →`, res))
+    // Frame Counter
+    const resultBox = document.getElementById('resultBox');
+    document.getElementById('btnStart')?.addEventListener('click', () =>
+      cs.evalScript('sfc_countStart()', r => resultBox.value = r)
     );
-  });
+    document.getElementById('btnEnd')?.addEventListener('click', () =>
+      cs.evalScript('sfc_countEnd()', r => resultBox.value = r)
+    );
 
-  // Motion Tile
-  const btnMotion = document.getElementById('btn-add-motion-tile');
-  if (btnMotion) {
-    btnMotion.addEventListener('click', () => {
-      cs.evalScript(
-        [
-          'app.beginUndoGroup("Motion Tile");',
-          'applyMotionTileEffect();',
-          'app.endUndoGroup();'
-        ].join('\n'),
-        res => console.log('MotionTile →', res)
+    // Layer追加ボタン
+    [
+      ['btn-add-camera',       'addCameraAboveSelectedLayers()'],
+      ['btn-add-null-1',       'addNullLayers(1)'],
+      ['btn-add-adjustment',   'addAdjustmentLayer()'],
+      ['btn-add-null-2',       'addNullLayers(2)'],
+      ['btn-add-one-frame',    'addOneFrameAdjustmentLayer()'],
+      ['btn-add-solid',        'addSolidLayer()'],
+      ['btn-add-null-3',       'addNullLayers(3)'],
+      ['btn-split-dimensions', 'splitLayersIntoDimensions()'],
+      ['btn-add-text',         'addTextLayer()'],
+      ['btn-save-project',     'saveProject()']
+    ].forEach(([id, fn]) => {
+      document.getElementById(id)?.addEventListener('click', () =>
+        cs.evalScript(fn)
       );
     });
-  }
 
-  // Comp Setter
-  const btnApply = document.getElementById('btnApplyComp');
-  const btnCenter = document.getElementById('btnCenterLayers');
-  if (btnApply) {
-    btnApply.addEventListener('click', () => {
-      const width = parseInt(document.getElementById('compWidth').value, 10);
-      const height = parseInt(document.getElementById('compHeight').value, 10);
-      const fps = parseFloat(document.getElementById('compFps').value);
-      const duration = parseFloat(document.getElementById('compDuration').value);
-      const unit = document.getElementById('durationUnit').value;
-      const isFrameBased = (unit === 'frames');
-      const setDuration = document.getElementById('setDuration').checked;
-      const useLayerSize = false;
-      const jsxCall = `setCompSettings(${width}, ${height}, ${fps}, ${duration}, ${isFrameBased}, ${setDuration}, ${useLayerSize})`;
-      cs.evalScript(jsxCall);
+    // Motion Tile
+    document.getElementById('btn-add-motion-tile')?.addEventListener('click', () =>
+      cs.evalScript(
+        'app.beginUndoGroup(\"Motion Tile\");\napplyMotionTileEffect();\napp.endUndoGroup();'
+      )
+    );
+
+    // Comp Setter
+    document.getElementById('btnApplyComp')?.addEventListener('click', () => {
+      const w = +document.getElementById('compWidth').value;
+      const h = +document.getElementById('compHeight').value;
+      const fps = +document.getElementById('compFps').value;
+      const dur = +document.getElementById('compDuration').value;
+      const isFrame = document.getElementById('durationUnit').value === 'frames';
+      const setDur = document.getElementById('setDuration').checked;
+      cs.evalScript(`setCompSettings(${w},${h},${fps},${dur},${isFrame},${setDur},false)`);
     });
-  }
-  if (btnCenter) {
-    btnCenter.addEventListener('click', () =>
+    document.getElementById('btnCenterLayers')?.addEventListener('click', () =>
       cs.evalScript('centerAllLayers()')
     );
-  }
 
-  // 解像度プリセット
-  const presetRes = document.getElementById('presetResolution');
-  if (presetRes) {
-    presetRes.addEventListener('change', () => {
-      const val = presetRes.value;
-      if (val === 'active') {
+    // 解像度プリセット
+    document.getElementById('presetResolution')?.addEventListener('change', e => {
+      const v = e.target.value;
+      if (v === 'active') {
         cs.evalScript('getActiveCompResolution()', res => {
           const [w, h] = res.split(',').map(Number);
           document.getElementById('compWidth').value = w;
           document.getElementById('compHeight').value = h;
         });
-      } else if (val) {
-        const [w, h] = val.split('x').map(Number);
+      } else if (v) {
+        const [w, h] = v.split('x').map(Number);
         document.getElementById('compWidth').value = w;
         document.getElementById('compHeight').value = h;
       }
     });
-  }
+    document.getElementById('presetFramerate')?.addEventListener('change', e => {
+      const v = e.target.value;
+      if (v === 'active') cs.evalScript('getActiveCompFps()', fps =>
+        document.getElementById('compFps').value = +fps
+      );
+      else if (v) document.getElementById('compFps').value = v;
+    });
 
-  const presetFps = document.getElementById('presetFramerate');
-  if (presetFps) {
-    presetFps.addEventListener('change', () => {
-      const val = presetFps.value;
-      if (val === 'active') {
-        cs.evalScript('getActiveCompFps()', fps =>
-          document.getElementById('compFps').value = parseFloat(fps)
+    // FFX Preset: モーダル or ウィンドウ選択
+    const toggleWindow = document.getElementById('toggleWindow');
+    const btnCustomize  = document.getElementById('btn-customize-presets');
+    const overlay       = document.getElementById('configOverlay');
+    const iframe        = document.getElementById('configFrame');
+
+    // 永続化から読み込み
+    window.ffxPresetConfig = JSON.parse(localStorage.getItem('ffxPresetConfig') || '[]');
+    receivePresetConfig(window.ffxPresetConfig);
+
+    btnCustomize.addEventListener('click', () => {
+      if (toggleWindow?.checked) {
+        // 別ウィンドウ
+        const win = window.open(
+          'config.html',
+          'PresetConfigWindow',
+          'width=600,height=700,scrollbars=yes'
         );
-      } else if (val) {
-        document.getElementById('compFps').value = val;
-      }
-    });
-  }
-
-  // FFXプリセット設定
-  (function () {
-    const cs4 = new CSInterface();
-    const SLOT_COUNT = 8;
-
-    // 🔽 永続保存から復元
-    let savedPresets = [];
-    try {
-      const stored = localStorage.getItem('ffxPresetConfig');
-      if (stored) savedPresets = JSON.parse(stored);
-    } catch (e) {
-      console.warn('プリセット設定の読み込みに失敗しました', e);
-    }
-
-    window.ffxPresetConfig = Array(SLOT_COUNT).fill({ path: null, label: null });
-    const applyButtons = document.querySelectorAll('.preset-apply');
-
-    savedPresets.forEach((cfg, idx) => {
-      const btn = applyButtons[idx];
-      if (!btn) return;
-      if (cfg && cfg.path) {
-        btn.disabled = false;
-        btn.textContent = cfg.label || cfg.path.replace(/^.*[\\/]/, '').slice(0, 7);
-        window.ffxPresetConfig[idx] = cfg;
-      }
-    });
-
-    const overlay = document.getElementById('configOverlay');
-    const iframe = document.getElementById('configFrame');
-    const btnCustomize = document.getElementById('btn-customize-presets');
-
-    window.closeConfigModal = function () {
-      if (overlay) overlay.style.display = 'none';
-    };
-
-    if (btnCustomize) {
-      btnCustomize.addEventListener('click', () => {
-        iframe.src = 'config.html?' + new Date().getTime();
+        win.addEventListener('load', () => {
+          win.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
+        });
+      } else {
+        // iframeモーダル
+        iframe.src = 'config.html';
         overlay.style.display = 'flex';
-
         iframe.onload = () => {
-          iframe.contentWindow.postMessage({
-            type: 'loadPresets',
-            configs: window.ffxPresetConfig
-          }, '*');
+          iframe.contentWindow.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
         };
-      });
-    }
+      }
+    });
 
-    applyButtons.forEach(btn => {
+    // モーダル閉じる
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        overlay.style.display = 'none';
+        iframe.src = '';
+      }
+    });
+
+    // 子からの保存データ受信
+    window.addEventListener('message', e => {
+      if (e.data?.type === 'savePresets' && Array.isArray(e.data.configs)) {
+        receivePresetConfig(e.data.configs);
+        localStorage.setItem('ffxPresetConfig', JSON.stringify(e.data.configs));
+        if (!toggleWindow?.checked) {
+          overlay.style.display = 'none';
+          iframe.src = '';
+        }
+      }
+    });
+
+    // プリセット適用
+    document.querySelectorAll('.preset-apply').forEach((btn, i) => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.index, 10);
-        const cfg = window.ffxPresetConfig[idx];
+        const cfg = window.ffxPresetConfig[i] || {};
         if (!cfg.path) return alert('まずプリセットを設定してください。');
-        const esc = cfg.path.replace(/\\/g, '\\\\');
-        cs4.evalScript(`applyPreset("${esc}")`);
+        cs.evalScript(`applyPreset("${cfg.path.replace(/\\/g,'\\\\')}")`);
       });
     });
 
-    // 🔽 保存反映と永続化
-    window.receivePresetConfig = function (configs) {
-      configs.forEach((cfg, idx) => {
-        const btn = applyButtons[idx];
-        if (!btn) return;
+    // 設定反映ヘルパー
+    function receivePresetConfig(configs) {
+      window.ffxPresetConfig = configs;
+      document.querySelectorAll('.preset-apply').forEach((btn, i) => {
+        const cfg = configs[i] || {};
         if (cfg.path) {
           btn.disabled = false;
-          btn.textContent = cfg.label || cfg.path.replace(/^.*[\\/]/, '').slice(0, 7);
-          window.ffxPresetConfig[idx] = cfg;
+          btn.textContent = cfg.label || cfg.path.split(/[\\/]/).pop().slice(0,7);
         } else {
           btn.disabled = true;
-          btn.textContent = `Slot ${idx + 1}`;
-          window.ffxPresetConfig[idx] = { path: null, label: null };
+          btn.textContent = `Slot ${i+1}`;
         }
       });
-
-      // ✅ 永続化
-      localStorage.setItem('ffxPresetConfig', JSON.stringify(configs));
-    };
-
-    overlay.addEventListener('click', e => {
-      if (e.target === overlay) window.closeConfigModal();
-    });
-  })();
+    }
+  });
 })();

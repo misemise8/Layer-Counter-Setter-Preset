@@ -3,90 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <title>プリセット設定</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin:0; padding:20px; font-family:sans-serif; }
+    .slot { margin-bottom:12px; }
+    .slot input { width:200px; }
+    .slot button { margin-left:8px; }
+    .actions { margin-top:20px; text-align:right; }
+  </style>
   <script src="lib/CSInterface.js"></script>
+</head>
+<body>
+  <h2>FFX プリセット設定</h2>
+  <div id="slots"></div>
+  <div class="actions">
+    <button id="btn-cancel">キャンセル</button>
+    <button id="btn-save">保存</button>
+  </div>
+
   <script>
-    const csInterface = new CSInterface();
-
-    function renderSlots(savedConfig = []) {
-      const SLOT_COUNT = 8;
-      const configGrid = document.getElementById('config-grid');
-      configGrid.innerHTML = '';
-
-      for (let i = 0; i < SLOT_COUNT; i++) {
-        const saved = savedConfig[i] || {};
-        const slot = document.createElement('div');
-        slot.className = 'config-slot';
-        slot.dataset.index = i;
-        slot.dataset.path = saved.path || '';
-        slot.innerHTML = `
-          <label class="slot-label">Slot ${i + 1}:</label>
-          <input type="text" class="config-label" placeholder="名称" value="${saved.label || ''}" />
-          <button class="config-select">.ffx 選択</button>
-          <div class="config-path">${saved.path ? saved.path.replace(/^.*[\\/]/, '') : '未選択'}</div>
+    // スロットUIレンダリング
+    function renderSlots(configs) {
+      const container = document.getElementById('slots');
+      container.innerHTML = '';
+      for (let i = 0; i < 8; i++) {
+        const cfg = configs[i] || {};
+        const div = document.createElement('div');
+        div.className = 'slot';
+        div.innerHTML = `
+          Slot ${i+1}:
+          <input type="text" class="label" value="${cfg.label||''}" placeholder="ラベル">
+          <button class="select">.ffx選択</button>
+          <span class="path">${cfg.path?cfg.path.split(/[\\/]/).pop(): '未選択'}</span>
         `;
-        configGrid.appendChild(slot);
-
-        const btnSelect = slot.querySelector('.config-select');
-        const inputLabel = slot.querySelector('.config-label');
-        const divPath = slot.querySelector('.config-path');
-        let autoFilled = false;
-
-        inputLabel.addEventListener('input', () => { autoFilled = false; });
-
-        btnSelect.addEventListener('click', () => {
-          csInterface.evalScript('selectPresetFile()', result => {
-            if (!result || result === 'null') return;
-            slot.dataset.path = result;
-            const name = result.replace(/^.*[\\/]/, '');
-            divPath.textContent = name;
-            if (!autoFilled && !inputLabel.value) {
-              inputLabel.value = name.replace(/\.ffx$/i, '').slice(0, 5);
-              autoFilled = true;
-            }
+        // ファイル選択
+        div.querySelector('.select').addEventListener('click', () => {
+          new CSInterface().evalScript('selectPresetFile()', res => {
+            if (!res || res==='null') return;
+            cfg.path = res;
+            div.querySelector('.path').textContent = res.split(/[\\/]/).pop();
           });
         });
+        container.appendChild(div);
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('btn-save').addEventListener('click', () => {
-        const configs = [];
-        document.querySelectorAll('.config-slot').forEach(slot => {
-          const idx = +slot.dataset.index;
-          const label = slot.querySelector('.config-label').value.trim() || null;
-          const path = slot.dataset.path || null;
-          configs[idx] = { label, path };
-        });
-
-        if (window.parent && typeof window.parent.receivePresetConfig === 'function') {
-          window.parent.receivePresetConfig(configs);
-        }
-
-        if (window.parent && typeof window.parent.closeConfigModal === 'function') {
-          window.parent.closeConfigModal();
-        }
-      });
-
-      document.getElementById('btn-cancel').addEventListener('click', () => {
-        if (window.parent && typeof window.parent.closeConfigModal === 'function') {
-          window.parent.closeConfigModal();
-        }
-      });
+    // 親から初期データ受信
+    window.addEventListener('message', e => {
+      if (e.data?.type === 'loadPresets') {
+        window._configs = e.data.configs;
+        renderSlots(window._configs);
+      }
     });
 
-    window.addEventListener('message', (event) => {
-      if (!event.data || event.data.type !== 'loadPresets') return;
-      renderSlots(event.data.configs || []);
+    // 保存＆親ウィンドウへ送信
+    document.getElementById('btn-save').addEventListener('click', () => {
+      // ラベル更新
+      document.querySelectorAll('#slots .slot').forEach((div,i) => {
+        const label = div.querySelector('.label').value.trim();
+        window._configs[i] = {
+          path: window._configs[i]?.path || null,
+          label: label || null
+        };
+      });
+      // 親へ
+      const msg = { type:'savePresets', configs: window._configs };
+      // モーダル(iframe)の場合は window.parent、ポップアップなら opener
+      if (window.opener) window.opener.postMessage(msg, '*');
+      else if (window.parent) window.parent.postMessage(msg, '*');
+      // 閉じる
+      if (window.opener) window.close();
+      else window.parent.document.getElementById('configOverlay').style.display = 'none';
+    });
+
+    // キャンセル
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+      if (window.opener) window.close();
+      else window.parent.document.getElementById('configOverlay').style.display = 'none';
     });
   </script>
-</head>
-<body>
-  <h3 class="config-title">プリセット設定</h3>
-  <div id="config-grid" class="config-grid"></div>
-  <div class="modal-actions">
-    <button id="btn-save" class="action-button">保存</button>
-    <button id="btn-cancel" class="action-button">キャンセル</button>
-  </div>
 </body>
 </html>
