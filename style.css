@@ -347,4 +347,5 @@ label {
   max-height: 700px;
   border: none;
   background: white;
+  overflow: auto;
 }

@@ -103,23 +103,21 @@
     btnCustomize.addEventListener('click', () => {
       if (toggleWindow?.checked) {
         try {
-          // まず CEP モデルレスダイアログ
-          cs.openModelessDialog(
-            `file://${ext}/html/config.html`,
-            'PresetConfig',
-            'width=600,height=700'
-          );
+          // モデルレスダイアログで開く
+          const url = `file://${ext}/html/config.html?ts=${Date.now()}`;
+          cs.openModelessDialog(url, 'PresetConfig', 'width=600,height=700');
         } catch (e) {
-          // 万が一エラーなら外部ブラウザ
-          console.warn('ModelessDialog failed:', e);
+          console.warn('openModelessDialog に失敗:', e);
+          // フォールバックで外部ブラウザ
           cs.openURLInDefaultBrowser(`file://${ext}/html/config.html`);
         }
       } else {
-        // 既存の iframe モーダル
-        iframe.src = 'config.html';
+        // iframeモーダルで開く
+        const url = `file://${ext}/html/config.html?ts=${Date.now()}`;
+        iframe.src = url;
         overlay.style.display = 'flex';
         iframe.onload = () => {
-          iframe.contentWindow.postMessage({ type:'loadPresets', configs: ffxConfig }, '*');
+          iframe.contentWindow.postMessage({ type:'loadPresets', configs: window.ffxPresetConfig }, '*');
         };
       }
     });
@@ -149,7 +147,7 @@
       btn.addEventListener('click', () => {
         const cfg = window.ffxPresetConfig[i] || {};
         if (!cfg.path) return alert('まずプリセットを設定してください。');
-        cs.evalScript(`applyPreset("${cfg.path.replace(/\\/g,'\\\\')} ")`);
+        cs.evalScript(`applyPreset(\"${cfg.path.replace(/\\/g,'\\\\')}\")`);
       });
     });
 
